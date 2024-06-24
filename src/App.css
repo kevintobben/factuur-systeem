@@ -1,0 +1,16 @@
+#root {
+  /* max-width: 1280px; */
+  margin: 0 auto;
+  /* text-align: center; */
+}
+
+.full-width-container {
+  width: 100%;
+  background-color: #f0f0f0; 
+}
+
+.inner-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px; 
+}
