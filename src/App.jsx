@@ -1,4 +1,3 @@
-// App.jsx
 import './App.css';
 import './index.css';
 
@@ -15,37 +14,42 @@ import Forms from './pages/Forms.jsx';
 // react-router imports
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+// context imports
+import { InvoiceProvider } from './components/InvoiceContext.jsx';
+
 function App() {
   return (
-    <Router>
-      <div className="flex">
-        <Sidebar />
-        <div className="ml-64 p-4 w-full">
-          <Routes>
-            <Route 
-              exact path="/" 
-              element={ <Home/> }>
-            </Route>
-            <Route 
-              exact path="/facturen" 
-              element={ <Invoices/> }>
-            </Route>
-            <Route 
-              exact path="/factuurmaken" 
-              element={ <CreateInvoice/> }>
-            </Route>
-            <Route 
-              exact path="/instellingen" 
-              element={ <InvoiceSettings/> }>
-            </Route>
-            <Route 
-              exact path="/formulieren" 
-              element={ <Forms/> }>
-            </Route>
-          </Routes>
+    <InvoiceProvider>
+      <Router>
+        <div className="flex">
+          <Sidebar />
+          <div className="ml-64 p-4 w-full">
+            <Routes>
+              <Route 
+                exact path="/" 
+                element={ <Home/> }>
+              </Route>
+              <Route 
+                exact path="/facturen" 
+                element={ <Invoices/> }>
+              </Route>
+              <Route 
+                exact path="/factuurmaken" 
+                element={ <CreateInvoice/> }>
+              </Route>
+              <Route 
+                exact path="/instellingen" 
+                element={ <InvoiceSettings/> }>
+              </Route>
+              <Route 
+                exact path="/formulieren" 
+                element={ <Forms/> }>
+              </Route>
+            </Routes>
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </InvoiceProvider>
   );
 }
 

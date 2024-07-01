@@ -1,13 +1,24 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { usePDF } from 'react-to-pdf';
+import InvoiceContext from '../components/InvoiceContext.jsx';
 import Logo from '../images/DoeEzGroenLogo.png';
 
 const CreateInvoice = () => {
-
-  const { toPDF, targetRef } = usePDF({filename: 'invoice.pdf'});
+  const { settings } = useContext(InvoiceContext);
+  const { toPDF, targetRef } = usePDF({ filename: 'invoice.pdf' });
   const [items, setItems] = useState([
-    { id: 1, description: 'Buitentegels gravel kleur 50 x 50 cm', quantity: 18, price: 14.50, total: 250 }
+
   ]);
+
+  const [invoiceDate, setInvoiceDate] = useState('');
+  const calculateDueDate = () => {
+    if (invoiceDate) {
+      const dueDate = new Date(invoiceDate);
+      dueDate.setDate(dueDate.getDate() + 30);
+      return dueDate.toISOString().split('T')[0]; // Formateer als 'YYYY-MM-DD'
+    }
+    return '';
+  };
 
   const addItem = () => {
     const newItem = {
@@ -19,7 +30,23 @@ const CreateInvoice = () => {
     };
     setItems([...items, newItem]);
   };
-  
+  const updateItem = (id, field, value) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updatedItem = { ...item, [field]: value };
+        if (field === 'quantity' || field === 'price') {
+          updatedItem.total = updatedItem.quantity * updatedItem.price;
+        }
+        return updatedItem;
+      }
+      return item;
+    }));
+  };
+
+  const deleteItem = (id) => { 
+    setItems(items.filter(item => item.id !== id));
+  }
+
   return (
     <div className="mx-auto p-8" ref={targetRef}>
       <div className="flex justify-between items-start mb-8">
@@ -39,11 +66,31 @@ const CreateInvoice = () => {
         <div>
           <h2 className="text-lg font-semibold mb-2">Mijn details</h2>
           <div className="space-y-2">
-            <input placeholder="DoeEzGroen" className="w-full border border-gray-300 rounded px-3 py-2" />
-            <input placeholder="Ezra Boezeroen" className="w-full border border-gray-300 rounded px-3 py-2" />
-            <input placeholder="info@doeezgroen.nl" className="w-full border border-gray-300 rounded px-3 py-2" />
-            <input placeholder="Hoofstraat 1" className="w-full border border-gray-300 rounded px-3 py-2" />
-            <input placeholder="9514 BA Emmen" className="w-full border border-gray-300 rounded px-3 py-2" />
+            <input
+              placeholder="DoeEzGroen"
+              value={settings.myDetails.companyName}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="Ezra Boezeroen"
+              value={settings.myDetails.name}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="info@doeezgroen.nl"
+              value={settings.myDetails.email}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="Hoofstraat 1"
+              value={settings.myDetails.address}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="9514 BA Emmen"
+              value={settings.myDetails.postalCode}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
           </div>
         </div>
         <div>
@@ -62,15 +109,24 @@ const CreateInvoice = () => {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Factuurdatum</label>
-            <input type="date" value="2024-04-24" className="w-full border border-gray-300 rounded px-3 py-2" />
+            <input
+              type="date"
+              value={invoiceDate}
+              onChange={(e) => setInvoiceDate(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Betalingstermijn</label>
-            <input type="text" value="30 dagen" className="w-full border border-gray-300 rounded px-3 py-2" />
+            <input type="text" value={settings.paymentTerm} className="w-full border border-gray-300 rounded px-3 py-2" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Te betalen voor</label>
-            <input type="date" value="2024-05-24" className="w-full border border-gray-300 rounded px-3 py-2" />
+            <input
+              type="date"
+              value={calculateDueDate()}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
           </div>
         </div>
       </div>
@@ -80,8 +136,9 @@ const CreateInvoice = () => {
           <tr>
             <th className="py-2 px-4 text-left">Item</th>
             <th className="py-2 px-4 text-right">Aantal</th>
-            <th className="py-2 px-4 text-right">Nettoprijs</th>
+            <th className="py-2 px-4 text-right">Prijs per</th>
             <th className="py-2 px-4 text-right">Prijs</th>
+            <th className="py-2 px-4"></th>
           </tr>
         </thead>
         <tbody>
@@ -91,6 +148,7 @@ const CreateInvoice = () => {
                 <input
                   type="text"
                   value={item.description}
+                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                   className="w-full border-none"
                   placeholder="Item beschrijving"
                 />
@@ -99,6 +157,7 @@ const CreateInvoice = () => {
                 <input
                   type="number"
                   value={item.quantity}
+                  onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
                   className="w-full text-right border-none"
                 />
               </td>
@@ -106,11 +165,20 @@ const CreateInvoice = () => {
                 <input
                   type="number"
                   value={item.price}
+                  onChange={(e) => updateItem(item.id, 'price', parseFloat(e.target.value) || 0)}
                   className="w-full text-right border-none"
                   step="0.01"
                 />
               </td>
               <td className="py-2 px-4 text-right">€ {item.total.toFixed(2)}</td>
+              <td className="py-2 px-4 text-center">
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  X
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
